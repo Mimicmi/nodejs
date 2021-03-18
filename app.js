@@ -4,6 +4,7 @@ const app = express();
 const port = 3000;
 const URI = "mongodb+srv://dbSimon:dbSimonFrezard@cluster0.wqbnd.mongodb.net/sample_airbnb?retryWrites=true&w=majority";
 
+
 app.get('/', (req, res) => {
   res.send('Hello World!');
 });
@@ -29,12 +30,24 @@ myModel.find(function (err, myModel) {
   console.log(myModel);
 }).countDocuments();
 
-const listing = myModel.find({ name: /a/ }, { name: 1, listing_url: 1 }).skip(10).limit(10).sort({ _id: 1 });
-
 app.get('/api', (req, res) => {
 
+  const limitList = req.query.limit ? parseInt(req.query.limit) : 10;
+  const skip = req.query.skip ? parseInt(req.query.skip) : 0;
+
+  const q = req.query.q ? new RegExp('^' + req.query.q) : new RegExp('^a');
+  const q2 = req.query.q ? new RegExp('^' + req.query.q) : new RegExp('a');
+  const condition = { $or: [{ name: q }, { summary: q2 }] };
+
+  const listing = myModel.find(condition, { _id: 1, name: 1, listing_url: 1, summary: 1, address: 1 })
+    .skip(skip)
+    .limit(limitList)
+    .sort({ _id: 1 });
+
+
   listing.exec((err, result) => {
-    console.log(result);
+    console.log(req.query);
     res.send(result);
   });
+
 });
