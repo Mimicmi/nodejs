@@ -24,6 +24,17 @@ const mySchema = new mongoose.Schema({});
 const myModel = mongoose.model('airbnb', mySchema,
   'listingsAndReviews');
 
+const requestSchema = new mongoose.Schema({
+  rawHeaders: Array,
+  url: String,
+  query: Object,
+  date: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const requestModel = mongoose.model('request', requestSchema, 'requestFromUsers');
 
 myModel.find(function (err, myModel) {
   if (err) return console.error(err);
@@ -31,6 +42,11 @@ myModel.find(function (err, myModel) {
 }).countDocuments();
 
 app.get('/api', (req, res) => {
+
+  console.log(req);
+
+  let newRequest = new requestModel(req);
+  newRequest.save();
 
   const limitList = req.query.limit ? parseInt(req.query.limit) : 10;
   const skip = req.query.skip ? parseInt(req.query.skip) : 0;
@@ -46,7 +62,6 @@ app.get('/api', (req, res) => {
 
 
   listing.exec((err, result) => {
-    console.log(req.query);
     res.send(result);
   });
 
